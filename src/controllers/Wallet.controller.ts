@@ -78,6 +78,7 @@ class WalletController {
             //todo: CHECK balance state and revert if transaction passed on the account
             // await this.wallets.
             const revoked_ = await this.transactions.revokeBet(bet._id)
+            console.log(revoked_)
             return {success: !!revoked_}
         } catch (e: any) {
             this.logger.app.error(e)
@@ -89,6 +90,7 @@ class WalletController {
         try {
             const {bet, money, user, date} = req.body.data
             const final_ = await this.transactions.initBet(bet._id)
+            console.log(final_)
             if (!final_) {
                 return {success: false}
             }

@@ -23,7 +23,7 @@ export class TransactionService {
             return
         }
         //set bet in pending state  to be confirmed or destoryed later
-        await this.repo.create({
+        return this.repo.create({
             user: data.user_id,
             amount: data.to - data.from,
             balance_Pre: data.from,
@@ -32,7 +32,6 @@ export class TransactionService {
             bet: data.bet_id,
             status: 'pending'
         })
-        return true
     }
 
     //uninitialize a bet
