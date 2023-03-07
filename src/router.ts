@@ -8,7 +8,6 @@ import {sidecar} from "./init/sidecar.js";
 export const router = e.Router()
 const endpoints = {
     '/wallet/post': walletController.create,
-    '/wallet/transfer/post': walletController.put,
     '/transactions/leave-bet': LeaveBetConsumer
 }
 const mw = {

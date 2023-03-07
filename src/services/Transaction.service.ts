@@ -12,25 +12,22 @@ export class TransactionService {
         this.wallet = wallet
     }
 
+    //get by id
+    async get(bet_id: number) {
+        const result = await this.repo.find({where: (query) => query.where({bet: bet_id})})
+        return result[0]
+    }
+
     //start initialization of a new bet
-    async leaveBet(data: { user_id: number, date: Date, bet_id: number, from: number, to: number }) {
-        const wallet_ = await this.wallet.getByUser(data.user_id)
-        if (!wallet_) {
-            return
-        }
-        //todo: proper BUSINESS logic , that's crap currently
-        if (wallet_[0].balance !== data.to) {
-            return
-        }
+    async leaveBet(data: { user_id: number, date: Date, bet_id: number, money: number, currency: string, charge: string }) {
         //set bet in pending state  to be confirmed or destoryed later
         return this.repo.create({
             user: data.user_id,
-            amount: data.to - data.from,
-            balance_Pre: data.from,
-            balance_After: data.to,
+            amount: data.money,
             date: data.date,
             bet: data.bet_id,
-            status: 'pending'
+            status: 'pending',
+            stripe_charge: data.charge
         })
     }
 
@@ -41,11 +38,11 @@ export class TransactionService {
 
     //init a bet
     async initBet(bet_id: number) {
-        return this.repo.edit({status: 'open'}, (query) => query.where({_id: bet_id}))
+        return this.repo.edit({status: 'open'}, (query) => query.where({bet: bet_id}))
     }
 
     //resolve a bet
-    async resolveBet(_id: number){
+    async resolveBet(_id: number) {
 
     }
 

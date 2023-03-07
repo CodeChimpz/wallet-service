@@ -5,22 +5,20 @@ const walletSchema = {
     user: {
         type: SchemaDataTypes.integer
     },
-    balance: {
-        type: SchemaDataTypes.integer
+    stripe_id: {
+        type: SchemaDataTypes.string
     },
     active: {
         type: SchemaDataTypes.boolean
     },
-    status: {
-        type: SchemaDataTypes.string
-    }
 }
 
 export interface IWallet {
     user: number
-    balance: number
+    //bank account details
+    stripe_id: string
+    //activation status
     active: boolean
-    status: 'pending' | 'accessible'
 }
 
-export const walletRepo: Repository<IWallet> = await dataSource.createSchema('wallets', walletSchema, true)
+export const walletRepo: Repository<IWallet> = await dataSource.createSchema<IWallet>('wallets', walletSchema, true)
