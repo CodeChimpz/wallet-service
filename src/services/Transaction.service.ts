@@ -1,15 +1,18 @@
 import {Repository} from "knex-db-connector";
-import {IBetTransaction, ITransaction, betTransactionRepository} from "../schema/Transaction.schema.js";
+import {
+    IBetTransaction,
+    ITransaction,
+    betTransactionRepository,
+    resolveTransactionRepository, IBetResolve, Resolves
+} from "../schema/Transaction.schema.js";
 import {wallets, WalletService} from "./Wallet.service.js";
 import {query} from "express";
 
 export class TransactionService {
     repo: Repository<IBetTransaction>
-    wallet: WalletService
 
-    constructor(repo: Repository<IBetTransaction>, wallet: WalletService) {
+    constructor(repo: Repository<IBetTransaction>) {
         this.repo = repo
-        this.wallet = wallet
     }
 
     //get by id
@@ -18,34 +21,54 @@ export class TransactionService {
         return result[0]
     }
 
-    //start initialization of a new bet
-    async leaveBet(data: { user_id: number, date: Date, bet_id: number, money: number, currency: string, charge: string }) {
+    //start initialization of a new bet or refund
+    async create(data: { user: number, bet: number, stripe_charge: string, type: string }) {
         //set bet in pending state  to be confirmed or destoryed later
         return this.repo.create({
-            user: data.user_id,
-            amount: data.money,
-            date: data.date,
-            bet: data.bet_id,
-            status: 'pending',
-            stripe_charge: data.charge
-        })
+                ...data,
+                status: 'pending'
+            }
+        )
     }
 
     //uninitialize a bet
-    async revokeBet(bet_id: number) {
+    async revoke(bet_id: number) {
         return this.repo.delete((query) => query.where({bet: bet_id}))
     }
 
     //init a bet
-    async initBet(bet_id: number) {
-        return this.repo.edit({status: 'open'}, (query) => query.where({bet: bet_id}))
+    async confirm(_id: number) {
+        return this.repo.edit({status: 'finished'}, (query) => query.where({_id: _id}))
+    }
+}
+
+export class TransactionResolverService {
+    repo: Repository<IBetResolve>
+
+    constructor(repo: Repository<IBetResolve>) {
+        this.repo = repo
     }
 
-    //resolve a bet
-    async resolveBet(_id: number) {
+    //check if the payment is due still
+    async check(bet_id: number) {
+        const res = await this.repo.find({
+            select: 'status',
+            where: (query) => query.where({bet: bet_id})
+        })
+        return res[0].status
+    }
 
+    //resolve transaction
+    async settle(bet_id: number, user: number, result: Resolves, stripe_charge?: string | undefined) {
+        return this.repo.create({
+            resolve: result,
+            bet: bet_id,
+            stripe_charge,
+            status: 'confirmed'
+        })
     }
 
 }
 
-export const transactions = new TransactionService(betTransactionRepository, wallets)
+export const betTransactions = new TransactionService(betTransactionRepository)
+export const betResolves = new TransactionResolverService(resolveTransactionRepository)

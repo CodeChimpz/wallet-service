@@ -11,13 +11,10 @@ const betTransactionSchema = {
     stripe_charge: {
         type: SchemaDataTypes.string
     },
-    amount: {
-        type: SchemaDataTypes.integer
-    },
-    date: {
-        type: SchemaDataTypes.datetime
-    },
     status: {
+        type: SchemaDataTypes.string
+    },
+    type: {
         type: SchemaDataTypes.string
     }
 }
@@ -27,47 +24,44 @@ const betResolveTransactionSchema = {
         type: SchemaDataTypes.string
     }
 }
-const betRefundSchema = {
-    user: {
-        type: SchemaDataTypes.integer
-    },
-    bet: {
-        type: SchemaDataTypes.integer
-    },
-    stripe_charge: {
-        type: SchemaDataTypes.string
-    },
-    date: {
-        type: SchemaDataTypes.datetime
-    },
-}
 
-enum Resolves {
-    win = 'win',
-    loss = 'loss',
-    pending = 'pending'
-}
 
+//base transaction
 export interface ITransaction {
     user: number,
     stripe_charge: string,
-    amount: number,
-    date: Date,
-    status: 'finished' | 'open' | 'pending'
+    status: Confirmed
 }
 
+//leave bet or refund bet transaction
 export interface IBetTransaction extends ITransaction {
     bet: number,
+    type: TransTypes
 }
 
+//resolve bet transactions
 export interface IBetResolve extends ITransaction {
     bet: number,
     resolve: Resolves
 }
 
-export interface IBetRefund extends Exclude<ITransaction, 'amount' | 'status'> {
+export enum Resolves {
+    win = 'win',
+    loss = 'loss',
+    draw = 'draw',
+    pending = 'pending'
 }
+
+export enum TransTypes {
+    refund = 'refund',
+    bet = 'bet'
+}
+
+export enum Confirmed {
+    true = 'confirmed',
+    false = 'pending'
+}
+
 
 export const betTransactionRepository: Repository<IBetTransaction> = await dataSource.createSchema('bet_transactions', betTransactionSchema, true)
 export const resolveTransactionRepository: Repository<IBetResolve> = await dataSource.createSchema('bet_resolves', betResolveTransactionSchema, true)
-export const refundTransactionRepository: Repository<IBetRefund> = await dataSource.createSchema('bet_refund', betRefundSchema, true)
